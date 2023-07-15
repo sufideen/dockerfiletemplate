@@ -1,0 +1,42 @@
+name: Trigger auto deployment for devtest-containerapps
+
+# When this action will be executed
+on:
+  # Automatically trigger it when detected changes in repo
+  push:
+    branches: 
+      [ master ]
+    paths:
+    - '**'
+    - '.github/workflows/devtest-containerapps-AutoDeployTrigger-4f998bf9-843d-4db8-93da-66cb2ead06ae.yml'
+
+  # Allow mannually trigger 
+  workflow_dispatch:
+      
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout to the branch
+        uses: actions/checkout@v2
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.DEVTESTCONTAINERAPPS_AZURE_CREDENTIALS }}
+
+      - name: Build and push container image to registry
+        uses: azure/container-apps-deploy-action@v1
+        with:
+          appSourcePath: ${{ github.workspace }} 
+          registryUrl: cibsacr.azurecr.io
+          registryUsername: ${{ secrets.DEVTESTCONTAINERAPPS_REGISTRY_USERNAME }}
+          registryPassword: ${{ secrets.DEVTESTCONTAINERAPPS_REGISTRY_PASSWORD }}
+          containerAppName: devtest-containerapps
+          resourceGroup: POC-containerapps
+          imageToBuild: cibsacr.azurecr.io/devtest-containerapps:${{ github.sha }}
+          
+
+     
+
